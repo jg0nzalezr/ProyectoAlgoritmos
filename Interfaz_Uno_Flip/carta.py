@@ -1,4 +1,4 @@
-# carta.py
+# Definir la clase para las cartas
 class Carta:
     def __init__(self, color_claro, valor_claro, color_oscuro, valor_oscuro, tipo_accion=None):
         self.color_claro = color_claro

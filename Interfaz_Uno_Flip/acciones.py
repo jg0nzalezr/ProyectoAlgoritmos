@@ -1,5 +1,4 @@
-# acciones.py
-def aplicar_efecto_accion(juego, carta):
+def aplicar_efecto_accion(carta, juego):
     """ Aplica el efecto de las cartas de acción """
     siguiente_jugador = juego.obtener_siguiente_jugador()
     
