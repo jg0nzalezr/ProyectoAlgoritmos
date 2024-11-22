@@ -92,34 +92,34 @@ U   U  N  NN  O   O       F      L       I   P
         print("4. Gana el primer jugador que se deshaga de todas sus cartas o alcance 500 puntos.")
 
     def configurar_juego(self):
-            print("\nConfiguración del juego:")
-            num_jugadores = int(input("Ingrese el número de jugadores (2-10): "))
-            if 2 <= num_jugadores <= 10:
-                for i in range(num_jugadores - 1):  # Un jugador humano menos
-                    nombre_jugador = input(f"Ingrese el nombre del jugador {i + 1}: ")
-                    self.jugadores.append(nombre_jugador)
-                    self.manos_jugadores[nombre_jugador] = []
-                    self.puntuaciones[nombre_jugador] = 0
-                # Agregar jugador sintético
-                jugador_ia = JugadorIA("Jugador Sintético")
-                self.jugadores.append(jugador_ia)
-                self.manos_jugadores[jugador_ia] = []
-                self.puntuaciones[jugador_ia] = 0
-                print("\nJugadores configurados:")
-                for jugador in self.jugadores:
-                    print(f"- {jugador}")
-                print("\nEl juego está listo para comenzar.")
-            else:
-                print("Número de jugadores inválido. El juego debe tener entre 2 y 10 jugadores.")
-
+        print("\nConfiguración del juego:")
+        num_jugadores = int(input("Ingrese el número de jugadores (2-10): "))
+        if 2 <= num_jugadores <= 10:
+            for i in range(num_jugadores - 1):  # Un jugador humano menos
+                nombre_jugador = input(f"Ingrese el nombre del jugador {i + 1}: ")
+                self.jugadores.append(nombre_jugador)
+                self.manos_jugadores[nombre_jugador] = []  # Inicializar la mano del jugador humano
+                self.puntuaciones[nombre_jugador] = 0
+            # Agregar jugador sintético
+            jugador_ia = JugadorIA("Jugador Sintético")
+            self.jugadores.append(jugador_ia)
+            print("\nJugadores configurados:")
+            for jugador in self.jugadores:
+                print(f"- {jugador.nombre if isinstance(jugador, JugadorIA) else jugador}")  # Mostrar el nombre correctamente
+            print("\nEl juego está listo para comenzar.")
+        else:
+            print("Número de jugadores inválido. El juego debe tener entre 2 y 10 jugadores.")
 
     def repartir_cartas(self):
-        """Reparte 7 cartas a cada jugador"""
+        """Reparte 7 cartas a cada jugador."""
         for jugador in self.jugadores:
-            for _ in range(7):
-                carta = self.mazo_claro.pop()
-                self.manos_jugadores[jugador].append(carta)
-            print(f"{jugador} ha recibido 7 cartas.")
+            for _ in range(7):  # Repartir 7 cartas
+                carta = self.mazo_claro.pop()  # Sacar una carta del mazo
+                if isinstance(jugador, JugadorIA):  # Si el jugador es IA
+                    jugador.agregar_cartas([carta])  # Agregar la carta a su mano
+                else:  # Si es un jugador humano
+                    self.manos_jugadores[jugador].append(carta)
+            print(f"{jugador.nombre if isinstance(jugador, JugadorIA) else jugador} ha recibido 7 cartas.")
 
     def puede_jugar(self, carta):
         """Verifica si una carta puede ser jugada según las reglas"""
@@ -252,14 +252,19 @@ U   U  N  NN  O   O       F      L       I   P
     def verificar_ganador(self):
         """Verifica si algún jugador ha ganado"""
         for jugador in self.jugadores:
-            if len(self.manos_jugadores[jugador]) == 0:
-                return jugador
+            if isinstance(jugador, JugadorIA):  # Si es el jugador IA
+                if len(jugador.mano) == 0:  # Verifica su mano directamente
+                    return jugador
+            else:  # Si es un jugador humano
+                if len(self.manos_jugadores[jugador]) == 0:  # Verifica la mano en el diccionario
+                    return jugador
         return None
+
 
     def turno_jugador(self, nombre_jugador):
         """Gestiona el turno de un jugador (humano o IA)"""
         if isinstance(nombre_jugador, JugadorIA):
-            # Lógica para jugador IA
+            # Turno del jugador IA
             print(f"\nEs el turno de {nombre_jugador.nombre}. (Jugador IA)")
 
             # Obtener la carta actual y el estado del juego
@@ -277,18 +282,32 @@ U   U  N  NN  O   O       F      L       I   P
                 nombre_jugador.agregar_cartas([carta_robada])
                 print(f"{nombre_jugador.nombre} ha robado una carta.")
             else:
+                # Actualizar el estado del juego con la carta jugada
                 print(f"{nombre_jugador.nombre} ha jugado: {mejor_carta}")
-                self.pila_para_tirar.append(mejor_carta)
-                if mejor_carta.tipo_accion == "Comodín":
-                    nuevo_color = nombre_jugador.elegir_color_comodin()
-                    self.color_actual = nuevo_color
-                    print(f"{nombre_jugador.nombre} ha elegido el color: {nuevo_color}.")
-                nombre_jugador.jugar_carta(mejor_carta)
+                self.pila_para_tirar.append(mejor_carta)  # Agregar la carta a la pila para tirar
+                nombre_jugador.jugar_carta(mejor_carta)  # Eliminar la carta de la mano del jugador IA
+                
                 if mejor_carta.tipo_accion:
                     self.aplicar_efecto_accion(mejor_carta)
-
+                else:
+                    # Actualizar color y valor actuales
+                    self.color_actual = mejor_carta.color_claro if not self.lado_oscuro_activo else mejor_carta.color_oscuro
+                    self.valor_actual = mejor_carta.valor_claro if not self.lado_oscuro_activo else mejor_carta.valor_oscuro
+                
+                # Arte ASCII para la carta jugada
+                color = mejor_carta.color_claro if not self.lado_oscuro_activo else mejor_carta.color_oscuro
+                valor = mejor_carta.valor_claro if not self.lado_oscuro_activo else mejor_carta.valor_oscuro
+                ascii_art = f"""
+                ╔════════════════════════╗
+                ║    {color.upper():^13} ║
+                ║                        ║
+                ║       {valor:^7}       ║
+                ║                        ║
+                ╚════════════════════════╝
+                """
+                print(ascii_art)
         else:
-            # Lógica para jugador humano
+            # Turno del jugador humano
             print(f"\nEs el turno de {nombre_jugador}.")
             self.verificar_uno(nombre_jugador)
             self.mostrar_mano_jugador(nombre_jugador)
@@ -318,7 +337,7 @@ U   U  N  NN  O   O       F      L       I   P
                                 self.valor_actual = carta.valor_claro if not self.lado_oscuro_activo else carta.valor_oscuro
                             print(f"Has jugado la carta {carta.__str__(self.lado_oscuro_activo)}.")
 
-                            # Añadimos el arte ASCII decorado para la carta jugada
+                            # Arte ASCII para la carta jugada
                             color = carta.color_claro if not self.lado_oscuro_activo else carta.color_oscuro
                             valor = carta.valor_claro if not self.lado_oscuro_activo else carta.valor_oscuro
                             ascii_art = f"""

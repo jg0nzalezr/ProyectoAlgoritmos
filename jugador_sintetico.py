@@ -8,63 +8,61 @@ class JugadorIA:
     def agregar_cartas(self, cartas):
         """Agrega cartas a la mano del jugador."""
         self.mano.extend(cartas)
+        print(f"[DEBUG] {self.nombre} ha recibido cartas: {[str(c) for c in cartas]}")
 
     def jugar_carta(self, carta):
         """Juega una carta específica de la mano."""
         if carta in self.mano:
             self.mano.remove(carta)
+            print(f"[DEBUG] {self.nombre} ha jugado la carta: {carta}")
+        else:
+            raise ValueError(f"[ERROR] La carta {carta} no está en la mano de {self.nombre}.")
 
     def seleccionar_jugada(self, carta_actual, color_actual, lado_oscuro_activo):
         """
         Selecciona la mejor carta para jugar acorde a las reglas del juego y la situación actual.
-        La lógica prioriza:
-        1. Cartas de acción que afecten al oponente (como "Toma 2", "Reversa", etc.).
-        2. Cartas que coincidan en color o valor.
-        3. Cartas numéricas si no hay acciones disponibles.
         """
-        cartas_validas = []
-        mejor_carta = None
+        print(f"\n[DEBUG] Turno de {self.nombre} (Jugador IA)")
+        print(f"[DEBUG] Carta en mesa: {carta_actual}")
+        print(f"[DEBUG] Color actual: {color_actual}")
+        print(f"[DEBUG] Lado oscuro activo: {lado_oscuro_activo}")
+        print(f"[DEBUG] Cartas en la mano del jugador IA: {[str(c) for c in self.mano]}")
 
-        # Buscar cartas válidas
+        cartas_no_comodines = []
+        cartas_comodines = []
+
+        # Buscar cartas jugables en la mano
         for carta in self.mano:
             if lado_oscuro_activo:
-                if (carta.color_oscuro == color_actual or
-                    carta.valor_oscuro == carta_actual.valor_oscuro or
-                    carta.tipo_accion == carta_actual.tipo_accion or
-                    carta.tipo_accion == "Comodín"):
-                    cartas_validas.append(carta)
+                if carta.color_oscuro == color_actual or carta.valor_oscuro == carta_actual.valor_oscuro:
+                    cartas_no_comodines.append(carta)
+                elif carta.tipo_accion == "Comodín":
+                    cartas_comodines.append(carta)
             else:
-                if (carta.color_claro == color_actual or
-                    carta.valor_claro == carta_actual.valor_claro or
-                    carta.tipo_accion == carta_actual.tipo_accion or
-                    carta.tipo_accion == "Comodín"):
-                    cartas_validas.append(carta)
+                if carta.color_claro == color_actual or carta.valor_claro == carta_actual.valor_claro:
+                    cartas_no_comodines.append(carta)
+                elif carta.tipo_accion == "Comodín":
+                    cartas_comodines.append(carta)
 
-        # Si no hay cartas válidas, debe robar
-        if not cartas_validas:
-            return "ROBAR"
+        # Depuración: Mostrar cartas jugables separadas
+        print(f"[DEBUG] Cartas no comodines jugables: {[str(c) for c in cartas_no_comodines]}")
+        print(f"[DEBUG] Cartas comodines jugables: {[str(c) for c in cartas_comodines]}")
 
-        # Priorizar cartas de acción
-        for carta in cartas_validas:
-            if carta.tipo_accion in ["Toma 2", "Toma 5", "Salta", "Reversa", "Flip", "Comodín"]:
-                mejor_carta = carta
-                break
+        # Priorizar cartas no comodines
+        if cartas_no_comodines:
+            mejor_carta = cartas_no_comodines[0]  # Jugar la primera carta válida
+            print(f"[DEBUG] Jugando carta no comodín: {mejor_carta}")
+            return mejor_carta
 
-        # Si no hay cartas de acción, priorizar cartas del mismo color
-        if mejor_carta is None:
-            for carta in cartas_validas:
-                if lado_oscuro_activo and carta.color_oscuro == color_actual:
-                    mejor_carta = carta
-                    break
-                elif not lado_oscuro_activo and carta.color_claro == color_actual:
-                    mejor_carta = carta
-                    break
+        # Si solo hay comodines disponibles, jugarlos como última opción
+        if cartas_comodines:
+            mejor_carta = cartas_comodines[0]  # Jugar el primer comodín disponible
+            print(f"[DEBUG] Jugando carta comodín como última opción: {mejor_carta}")
+            return mejor_carta
 
-        # Si no hay cartas del mismo color, priorizar por número o acción general
-        if mejor_carta is None:
-            mejor_carta = cartas_validas[0]  # Seleccionar la primera carta válida como última opción
-
-        return mejor_carta
+        # Si no hay cartas jugables, devolver "ROBAR"
+        print("[DEBUG] No hay cartas válidas. Decisión: Robar.")
+        return "ROBAR"
 
     def elegir_color_comodin(self):
         """
@@ -78,29 +76,9 @@ class JugadorIA:
 
         # Elegir el color con mayor cantidad de cartas
         color_predominante = max(colores, key=colores.get)
+        print(f"[DEBUG] Color elegido para comodín: {color_predominante}")
         return color_predominante
 
-    def evaluar_estado_juego(self, carta_actual, color_actual, lado_oscuro_activo):
-        """
-        Evalúa el estado del juego y calcula la probabilidad de ganar.
-        Este método puede usarse para mejorar las decisiones estratégicas del jugador IA.
-        """
-        # Calcular cartas jugables
-        cartas_jugables = []
-        for carta in self.mano:
-            if lado_oscuro_activo:
-                if (carta.color_oscuro == color_actual or
-                    carta.valor_oscuro == carta_actual.valor_oscuro or
-                    carta.tipo_accion == carta_actual.tipo_accion or
-                    carta.tipo_accion == "Comodín"):
-                    cartas_jugables.append(carta)
-            else:
-                if (carta.color_claro == color_actual or
-                    carta.valor_claro == carta_actual.valor_claro or
-                    carta.tipo_accion == carta_actual.tipo_accion or
-                    carta.tipo_accion == "Comodín"):
-                    cartas_jugables.append(carta)
-
-        # Calcular probabilidad de ganar (cartas jugables / total de cartas)
-        probabilidad_ganar = len(cartas_jugables) / len(self.mano) if self.mano else 0
-        return probabilidad_ganar
+    def __str__(self):
+        """Devuelve el nombre del jugador para representarlo como texto."""
+        return self.nombre
