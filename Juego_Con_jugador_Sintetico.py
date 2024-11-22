@@ -260,114 +260,118 @@ U   U  N  NN  O   O       F      L       I   P
                     return jugador
         return None
 
-
     def turno_jugador(self, nombre_jugador):
-        """Gestiona el turno de un jugador (humano o IA)"""
-        if isinstance(nombre_jugador, JugadorIA):
-            # Turno del jugador IA
-            print(f"\nEs el turno de {nombre_jugador.nombre}. (Jugador IA)")
+            """Gestiona el turno de un jugador (humano o IA)"""
+            if isinstance(nombre_jugador, JugadorIA):
+                print(f"\nEs el turno de {nombre_jugador.nombre}. (Jugador IA)")
 
-            # Obtener la carta actual y el estado del juego
-            carta_actual = self.pila_para_tirar[-1]
-            lado_oscuro_activo = self.lado_oscuro_activo
+                # Obtener la carta actual y el estado del juego
+                carta_actual = self.pila_para_tirar[-1]
+                lado_oscuro_activo = self.lado_oscuro_activo
 
-            # Jugador IA selecciona la mejor jugada
-            mejor_carta = nombre_jugador.seleccionar_jugada(carta_actual, self.color_actual, lado_oscuro_activo)
+                # Jugador IA selecciona la mejor jugada
+                mejor_carta = nombre_jugador.seleccionar_jugada(carta_actual, self.color_actual, lado_oscuro_activo)
 
-            if mejor_carta == "ROBAR":
-                print(f"{nombre_jugador.nombre} no tiene cartas jugables. Roba una carta.")
-                if len(self.pila_para_tomar) == 0:
-                    self.reiniciar_pila_para_tomar()
-                carta_robada = self.pila_para_tomar.pop()
-                nombre_jugador.agregar_cartas([carta_robada])
-                print(f"{nombre_jugador.nombre} ha robado una carta.")
-            else:
-                # Actualizar el estado del juego con la carta jugada
-                print(f"{nombre_jugador.nombre} ha jugado: {mejor_carta}")
-                self.pila_para_tirar.append(mejor_carta)  # Agregar la carta a la pila para tirar
-                nombre_jugador.jugar_carta(mejor_carta)  # Eliminar la carta de la mano del jugador IA
-                
-                if mejor_carta.tipo_accion:
-                    self.aplicar_efecto_accion(mejor_carta)
-                else:
-                    # Actualizar color y valor actuales
-                    self.color_actual = mejor_carta.color_claro if not self.lado_oscuro_activo else mejor_carta.color_oscuro
-                    self.valor_actual = mejor_carta.valor_claro if not self.lado_oscuro_activo else mejor_carta.valor_oscuro
-                
-                # Arte ASCII para la carta jugada
-                color = mejor_carta.color_claro if not self.lado_oscuro_activo else mejor_carta.color_oscuro
-                valor = mejor_carta.valor_claro if not self.lado_oscuro_activo else mejor_carta.valor_oscuro
-                ascii_art = f"""
-                ╔════════════════════════╗
-                ║    {color.upper():^13} ║
-                ║                        ║
-                ║       {valor:^7}       ║
-                ║                        ║
-                ╚════════════════════════╝
-                """
-                print(ascii_art)
-        else:
-            # Turno del jugador humano
-            print(f"\nEs el turno de {nombre_jugador}.")
-            self.verificar_uno(nombre_jugador)
-            self.mostrar_mano_jugador(nombre_jugador)
-
-            accion_valida = False  # Variable para controlar si la acción fue válida
-
-            while not accion_valida:
-                accion = input("Elige una acción (1. Jugar carta, 2. Robar carta): ")
-                if accion == '1':
-                    # Arte ASCII para "Jugar carta"
-                    ascii_jugar_carta = """
-                    ╔══════════════════════╗
-                    ║  ¡HAS ELEGIDO JUGAR! ║
-                    ╚══════════════════════╝
-                    """
-                    print(ascii_jugar_carta)
-                    try:
-                        carta_elegida = int(input("Elige el número de la carta a jugar: ")) - 1
-                        carta = self.manos_jugadores[nombre_jugador][carta_elegida]
-                        if self.puede_jugar(carta):
-                            self.manos_jugadores[nombre_jugador].pop(carta_elegida)
-                            self.pila_para_tirar.append(carta)
-                            if carta.tipo_accion:
-                                self.aplicar_efecto_accion(carta)
-                            else:
-                                self.color_actual = carta.color_claro if not self.lado_oscuro_activo else carta.color_oscuro
-                                self.valor_actual = carta.valor_claro if not self.lado_oscuro_activo else carta.valor_oscuro
-                            print(f"Has jugado la carta {carta.__str__(self.lado_oscuro_activo)}.")
-
-                            # Arte ASCII para la carta jugada
-                            color = carta.color_claro if not self.lado_oscuro_activo else carta.color_oscuro
-                            valor = carta.valor_claro if not self.lado_oscuro_activo else carta.valor_oscuro
-                            ascii_art = f"""
-                            ╔════════════════════════╗
-                            ║    {color.upper():^13} ║
-                            ║                        ║
-                            ║       {valor:^7}       ║
-                            ║                        ║
-                            ╚════════════════════════╝
-                            """
-                            print(ascii_art)
-                            accion_valida = True
-                        else:
-                            print("No puedes jugar esa carta, intenta con otra carta o roba una carta.")
-                    except (ValueError, IndexError):
-                        print("Entrada inválida. Por favor selecciona una carta válida.")
-                elif accion == '2':
-                    # Arte ASCII para "Robar carta"
-                    ascii_robar_carta = """
-                    ╔═════════════════════╗
-                    ║   ¡HAS ROBADO UNA!  ║
-                    ╚═════════════════════╝
-                    """
-                    print(ascii_robar_carta)
+                if mejor_carta == "ROBAR":
+                    print(f"{nombre_jugador.nombre} no tiene cartas jugables. Roba una carta.")
                     if len(self.pila_para_tomar) == 0:
                         self.reiniciar_pila_para_tomar()
-                    self.tomar_cartas(nombre_jugador, 1)
-                    accion_valida = True
+                    carta_robada = self.pila_para_tomar.pop()
+                    nombre_jugador.agregar_cartas([carta_robada])
+                    print(f"{nombre_jugador.nombre} ha robado una carta.")
                 else:
-                    print("Acción no válida, intenta de nuevo.")
+                    # Actualizar el estado del juego con la carta jugada
+                    print(f"{nombre_jugador.nombre} ha jugado: {mejor_carta}")
+                    self.pila_para_tirar.append(mejor_carta)  # Agregar la carta a la pila para tirar
+                    nombre_jugador.jugar_carta(mejor_carta)  # Eliminar la carta de la mano del jugador IA
+                    
+                    # Manejar el efecto de la carta jugada
+                    if mejor_carta.tipo_accion == "Comodín":
+                        # Seleccionar automáticamente el color basado en la mano del jugador IA
+                        nuevo_color = nombre_jugador.elegir_color_comodin()
+                        self.color_actual = nuevo_color
+                        print(f"{nombre_jugador.nombre} ha elegido el color: {nuevo_color}.")
+                    elif mejor_carta.tipo_accion:
+                        self.aplicar_efecto_accion(mejor_carta)
+                    else:
+                        # Actualizar color y valor actuales
+                        self.color_actual = mejor_carta.color_claro if not self.lado_oscuro_activo else mejor_carta.color_oscuro
+                        self.valor_actual = mejor_carta.valor_claro if not self.lado_oscuro_activo else mejor_carta.valor_oscuro
+                    
+                    # Arte ASCII para la carta jugada
+                    color = mejor_carta.color_claro if not self.lado_oscuro_activo else mejor_carta.color_oscuro
+                    valor = mejor_carta.valor_claro if not self.lado_oscuro_activo else mejor_carta.valor_oscuro
+                    ascii_art = f"""
+                    ╔════════════════════════╗
+                    ║    {color.upper():^13} ║
+                    ║                        ║
+                    ║       {valor:^7}       ║
+                    ║                        ║
+                    ╚════════════════════════╝
+                    """
+                    print(ascii_art)
+            else:
+                # Turno del jugador humano
+                print(f"\nEs el turno de {nombre_jugador}.")
+                self.verificar_uno(nombre_jugador)
+                self.mostrar_mano_jugador(nombre_jugador)
+
+                accion_valida = False  # Variable para controlar si la acción fue válida
+
+                while not accion_valida:
+                    accion = input("Elige una acción (1. Jugar carta, 2. Robar carta): ")
+                    if accion == '1':
+                        # Arte ASCII para "Jugar carta"
+                        ascii_jugar_carta = """
+                        ╔══════════════════════╗
+                        ║  ¡HAS ELEGIDO JUGAR! ║
+                        ╚══════════════════════╝
+                        """
+                        print(ascii_jugar_carta)
+                        try:
+                            carta_elegida = int(input("Elige el número de la carta a jugar: ")) - 1
+                            carta = self.manos_jugadores[nombre_jugador][carta_elegida]
+                            if self.puede_jugar(carta):
+                                self.manos_jugadores[nombre_jugador].pop(carta_elegida)
+                                self.pila_para_tirar.append(carta)
+                                if carta.tipo_accion:
+                                    self.aplicar_efecto_accion(carta)
+                                else:
+                                    self.color_actual = carta.color_claro if not self.lado_oscuro_activo else carta.color_oscuro
+                                    self.valor_actual = carta.valor_claro if not self.lado_oscuro_activo else carta.valor_oscuro
+                                print(f"Has jugado la carta {carta.__str__(self.lado_oscuro_activo)}.")
+
+                                # Arte ASCII para la carta jugada
+                                color = carta.color_claro if not self.lado_oscuro_activo else carta.color_oscuro
+                                valor = carta.valor_claro if not self.lado_oscuro_activo else carta.valor_oscuro
+                                ascii_art = f"""
+                                ╔════════════════════════╗
+                                ║    {color.upper():^13} ║
+                                ║                        ║
+                                ║       {valor:^7}       ║
+                                ║                        ║
+                                ╚════════════════════════╝
+                                """
+                                print(ascii_art)
+                                accion_valida = True
+                            else:
+                                print("No puedes jugar esa carta, intenta con otra carta o roba una carta.")
+                        except (ValueError, IndexError):
+                            print("Entrada inválida. Por favor selecciona una carta válida.")
+                    elif accion == '2':
+                        # Arte ASCII para "Robar carta"
+                        ascii_robar_carta = """
+                        ╔═════════════════════╗
+                        ║   ¡HAS ROBADO UNA!  ║
+                        ╚═════════════════════╝
+                        """
+                        print(ascii_robar_carta)
+                        if len(self.pila_para_tomar) == 0:
+                            self.reiniciar_pila_para_tomar()
+                        self.tomar_cartas(nombre_jugador, 1)
+                        accion_valida = True
+                    else:
+                        print("Acción no válida, intenta de nuevo.")
 
 
 
